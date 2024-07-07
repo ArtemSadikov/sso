@@ -1,0 +1,11 @@
+env: "local"
+grpc:
+  port: 5000
+  timeout: 10s
+postgres:
+  port: 5432
+  host: "127.0.0.1"
+  user: "postgres"
+  password: "password"
+  database: "postgres"
+token_ttl: 1h
