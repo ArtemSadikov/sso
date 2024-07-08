@@ -5,9 +5,12 @@ import (
 	"log/slog"
 	"net"
 
+	"cinematic.com/sso/internal/domain/service"
 	"cinematic.com/sso/internal/infrastructure/config"
 	"cinematic.com/sso/internal/infrastructure/logger"
 	grpcServers "cinematic.com/sso/internal/presenters/grpc"
+	"cinematic.com/sso/internal/usecase"
+	uc "cinematic.com/sso/internal/usecase"
 	ssoAuthApi "github.com/ArtemSadikov/cinematic.back_protos/generated/go/auth"
 	"go.uber.org/dig"
 	"google.golang.org/grpc"
@@ -33,8 +36,20 @@ func New(opts ...dig.Option) (*Container, error) {
 		return nil, err
 	}
 
-	if err := container.Provide(func() grpcServers.AuthServer {
-		return *grpcServers.NewAuthServer()
+	if err := container.Provide(func(logger *slog.Logger) service.UserService {
+		return service.NewUserService(logger)
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := container.Provide(func(logger *slog.Logger, userSrv service.UserService) usecase.AuthUseCase {
+		return uc.NewAuthUseCase(logger, userSrv)
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := container.Provide(func(authUc usecase.UseCases) grpcServers.AuthServer {
+		return *grpcServers.NewAuthServer(authUc)
 	}); err != nil {
 		return nil, err
 	}

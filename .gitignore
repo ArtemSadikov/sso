@@ -1,3 +1,4 @@
 config/*
 !config/config.example.yml
 .bin
+.vscode

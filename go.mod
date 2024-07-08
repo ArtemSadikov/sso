@@ -2,11 +2,16 @@ module cinematic.com/sso
 
 go 1.22.3
 
+require github.com/jackc/pgx v3.6.2+incompatible
+
 require (
 	github.com/ArtemSadikov/cinematic.back_protos v0.0.0-20240619205225-d8002d0677fd // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	go.uber.org/dig v1.17.1 // indirect
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
