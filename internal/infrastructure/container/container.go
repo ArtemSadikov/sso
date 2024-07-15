@@ -8,6 +8,8 @@ import (
 	"cinematic.com/sso/internal/domain/service"
 	"cinematic.com/sso/internal/infrastructure/config"
 	"cinematic.com/sso/internal/infrastructure/logger"
+	"cinematic.com/sso/internal/infrastructure/storage/postgresql"
+	"cinematic.com/sso/internal/infrastructure/storage/repository"
 	grpcServers "cinematic.com/sso/internal/presenters/grpc"
 	"cinematic.com/sso/internal/usecase"
 	uc "cinematic.com/sso/internal/usecase"
@@ -36,8 +38,22 @@ func New(opts ...dig.Option) (*Container, error) {
 		return nil, err
 	}
 
-	if err := container.Provide(func(logger *slog.Logger) service.UserService {
-		return service.NewUserService(logger)
+	if err := container.Provide(func(cfg *config.Config, logger *slog.Logger) (*postgresql.Storage, error) {
+		connection := postgresql.NewPostgreSQLStorage(cfg.Storage, logger)
+		err := connection.Connect()
+		return connection, err
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := container.Provide(func(logger *slog.Logger, storage *postgresql.Storage) repository.UserRepository {
+		return repository.NewUserRepository(logger, storage.DB)
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := container.Provide(func(logger *slog.Logger, repo repository.UserRepository) service.UserService {
+		return service.NewUserService(logger, repo)
 	}); err != nil {
 		return nil, err
 	}
@@ -48,7 +64,7 @@ func New(opts ...dig.Option) (*Container, error) {
 		return nil, err
 	}
 
-	if err := container.Provide(func(authUc usecase.UseCases) grpcServers.AuthServer {
+	if err := container.Provide(func(authUc usecase.AuthUseCase) grpcServers.AuthServer {
 		return *grpcServers.NewAuthServer(authUc)
 	}); err != nil {
 		return nil, err

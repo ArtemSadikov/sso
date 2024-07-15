@@ -11,6 +11,6 @@ type UseCases interface {
 }
 
 type AuthUseCase interface {
-	AuthByCredentials(ctx context.Context) (*model.User, error)
-	RegisterUser(ctx context.Context) (*model.User, error)
+	AuthByCredentials(ctx context.Context, login string, password string) (*model.User, error)
+	RegisterUser(ctx context.Context, login string, password string) (*model.User, error)
 }

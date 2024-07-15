@@ -12,8 +12,8 @@ type Service interface {
 }
 
 type UserService interface {
-	CreateUsers(ctx context.Context, users ...*model.User) ([]*model.User, error)
-	UpdateUsers(ctx context.Context, users ...*model.User) (*model.User, error)
+	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
+	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
 	DeleteUsers(ctx context.Context, users ...*model.User) error
 	FindUsersByIds(ctx context.Context, ids ...*uuid.UUID) ([]*model.User, error)
 }

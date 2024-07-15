@@ -7,16 +7,23 @@ import (
 type User struct {
 	Id uuid.UUID
 
-	Login string
+	Login    string
+	Password string
 }
 
 func NewUserWithId(id uuid.UUID, login string) *User {
-	return &User{id, login}
+	return &User{
+		Id: id,
+		Login: login,
+	}
+}
+
+func NewUserWithPassword(login string, password string) *User {
+	user := NewUser(login)
+	user.Password = password
+	return user
 }
 
 func NewUser(login string) *User {
-	return &User{
-		Id:    uuid.New(),
-		Login: login,
-	}
+	return NewUserWithId(uuid.New(), login)
 }

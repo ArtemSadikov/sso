@@ -5,16 +5,18 @@ import (
 	"log/slog"
 
 	"cinematic.com/sso/internal/domain/model"
+	"cinematic.com/sso/internal/infrastructure/storage/repository"
 	"github.com/google/uuid"
 )
 
 type userService struct {
 	logger *slog.Logger
+	repo repository.UserRepository
 }
 
 // CreateUsers implements UserService.
-func (u *userService) CreateUsers(ctx context.Context, users ...*model.User) ([]*model.User, error) {
-	return nil, nil
+func (u *userService) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
+	return u.repo.CreateUser(ctx, user.Login, user.Password)
 }
 
 // DeleteUsers implements UserService.
@@ -28,10 +30,10 @@ func (u *userService) FindUsersByIds(ctx context.Context, ids ...*uuid.UUID) ([]
 }
 
 // UpdateUsers implements UserService.
-func (u *userService) UpdateUsers(ctx context.Context, users ...*model.User) (*model.User, error) {
+func (u *userService) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	return nil, nil
 }
 
-func NewUserService(logger *slog.Logger) *userService {
-	return &userService{logger}
+func NewUserService(logger *slog.Logger, repo repository.UserRepository) *userService {
+	return &userService{logger, repo}
 }
