@@ -16,6 +16,7 @@ type Config struct {
 	Storage        *StorageConfig `yaml:"postgres"`
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
+	TokenSecret    string        `yaml:"token_secret"`
 }
 
 type GrpcConfig struct {

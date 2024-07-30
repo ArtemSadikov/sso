@@ -10,10 +10,10 @@ import (
 	"cinematic.com/sso/internal/infrastructure/logger"
 	"cinematic.com/sso/internal/infrastructure/storage/postgresql"
 	"cinematic.com/sso/internal/infrastructure/storage/repository"
-	grpcServers "cinematic.com/sso/internal/presenters/grpc"
+	authSrv "cinematic.com/sso/internal/presenters/grpc/auth"
 	"cinematic.com/sso/internal/usecase"
-	uc "cinematic.com/sso/internal/usecase"
-	ssoAuthApi "github.com/ArtemSadikov/cinematic.back_protos/generated/go/auth"
+	authUc "cinematic.com/sso/internal/usecase/auth"
+	"github.com/ArtemSadikov/cinematic.back_protos/generated/go/sso"
 	"go.uber.org/dig"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -46,6 +46,12 @@ func New(opts ...dig.Option) (*Container, error) {
 		return nil, err
 	}
 
+	if err := container.Provide(func(cfg *config.Config) service.TokenService {
+		return service.NewTokenService(cfg)
+	}); err != nil {
+		return nil, err
+	}
+
 	if err := container.Provide(func(logger *slog.Logger, storage *postgresql.Storage) repository.UserRepository {
 		return repository.NewUserRepository(logger, storage.DB)
 	}); err != nil {
@@ -58,14 +64,14 @@ func New(opts ...dig.Option) (*Container, error) {
 		return nil, err
 	}
 
-	if err := container.Provide(func(logger *slog.Logger, userSrv service.UserService) usecase.AuthUseCase {
-		return uc.NewAuthUseCase(logger, userSrv)
+	if err := container.Provide(func(logger *slog.Logger, userSrv service.UserService, tokenSrv service.TokenService) usecase.AuthUseCase {
+		return authUc.NewAuthUseCase(logger, userSrv, tokenSrv)
 	}); err != nil {
 		return nil, err
 	}
 
-	if err := container.Provide(func(authUc usecase.AuthUseCase) grpcServers.AuthServer {
-		return *grpcServers.NewAuthServer(authUc)
+	if err := container.Provide(func(authUc usecase.AuthUseCase) authSrv.AuthServer {
+		return *authSrv.NewAuthServer(authUc)
 	}); err != nil {
 		return nil, err
 	}
@@ -77,12 +83,12 @@ func (c *Container) Run() error {
 	if err := c.container.Invoke(func(
 		cfg *config.Config,
 		logger *slog.Logger,
-		authServer grpcServers.AuthServer,
+		authServer authSrv.AuthServer,
 	) error {
 		srvErr := make(chan error)
 		s := grpc.NewServer()
 
-		ssoAuthApi.RegisterAuthServiceServer(s, authServer)
+		sso.RegisterAuthServiceServer(s, authServer)
 		reflection.Register(s)
 
 		go func() {

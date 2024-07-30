@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cinematic.com/sso/internal/domain/model"
+	"github.com/google/uuid"
 )
 
 type Repository interface{}
@@ -23,6 +24,6 @@ type UserRemover interface {
 }
 
 type UserSaver interface {
-	CreateUser(ctx context.Context, login string, password string) (*model.User, error)
+	CreateUser(ctx context.Context, id uuid.UUID, password string, contacts ...*model.UserContact) (*model.User, error)
 	UpdateUser(ctx context.Context, login string) (*model.User, error)
 }

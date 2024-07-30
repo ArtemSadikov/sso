@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"cinematic.com/sso/internal/domain/model"
@@ -11,8 +12,8 @@ import (
 )
 
 type userRepo struct {
-	logger  *slog.Logger
-	db *sqlx.DB
+	logger *slog.Logger
+	db     *sqlx.DB
 }
 
 // FindUsersByIds implements UserRepository.
@@ -25,20 +26,43 @@ func (u *userRepo) RemoveUsers(ctx context.Context, users ...*model.User) error 
 	return nil
 }
 
-func (u *userRepo) CreateUser(ctx context.Context, login string, password string) (*uuid.UUID, error) {
+func (u *userRepo) CreateUser(ctx context.Context, id uuid.UUID, password string, contacts ...*model.UserContact) (*model.User, error) {
 	user := &entity.UserEntity{}
 
-	q, err := u.db.PrepareContext(ctx, "INSERT INTO sso.users(login, password) VALUES (?, ?)")
+	tx, err := u.db.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := q.ExecContext(ctx, login, password)
+	uq, err := tx.PreparexContext(ctx, "INSERT INTO sso.users(id, password) VALUES ($1, $2) RETURNING *")
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	return uuid.MustParse(res.LastInsertId()), nil
+	if err := uq.QueryRowxContext(ctx, id, password).StructScan(user); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if len(contacts) > 0 {
+		c := []*entity.UserContact{}
+		for _, contact := range contacts {
+			c = append(c, entity.NewUserContactFromModel(contact))
+		}
+
+		q := "INSERT INTO sso.user_contacts(id, _type, _value, user_id) VALUES (:id, :_type, :_value, :user_id)"
+		if _, err := tx.NamedExecContext(ctx, q, c); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return user.MapToModel(), nil
 }
 
 func (u *userRepo) UpdateUser(ctx context.Context, login string) (*model.User, error) {

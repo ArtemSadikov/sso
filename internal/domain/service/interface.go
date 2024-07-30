@@ -9,11 +9,18 @@ import (
 
 type Service interface {
 	UserService
+	TokenService
 }
 
 type UserService interface {
-	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
+	CreateUser(ctx context.Context, password string, login string) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
 	DeleteUsers(ctx context.Context, users ...*model.User) error
 	FindUsersByIds(ctx context.Context, ids ...*uuid.UUID) ([]*model.User, error)
+}
+
+type TokenService interface {
+	GeneratePair(ctx context.Context, user *model.User) (*TokenPair, error)
+	RefreshToken(ctx context.Context, user *model.User, token *model.Token) (*model.Token, error)
+	Validate(ctx context.Context, token *model.Token) error
 }

@@ -1,29 +1,39 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
 type User struct {
 	Id uuid.UUID
 
-	Login    string
-	Password string
+	CreatedAt time.Time
+	UpdatedAt *time.Time
+	DeletedAt *time.Time
+
+	password string
+
+	Contacts []*UserContact
 }
 
-func NewUserWithId(id uuid.UUID, login string) *User {
+func (u *User) SetPassword(password string) {
+	u.password = password
+}
+
+func (u *User) AddContact(contact *UserContact) {
+	u.Contacts = append(u.Contacts, contact)
+}
+
+func NewUserWithoutId(contacts ...*UserContact) *User {
+	return NewUser(uuid.New(), contacts...)
+}
+
+func NewUser(id uuid.UUID, contacts ...*UserContact) *User {
 	return &User{
-		Id: id,
-		Login: login,
+		Id:        id,
+		CreatedAt: time.Now(),
+		Contacts:  contacts,
 	}
-}
-
-func NewUserWithPassword(login string, password string) *User {
-	user := NewUser(login)
-	user.Password = password
-	return user
-}
-
-func NewUser(login string) *User {
-	return NewUserWithId(uuid.New(), login)
 }
