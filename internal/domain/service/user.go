@@ -15,14 +15,8 @@ type userService struct {
 }
 
 // CreateUsers implements UserService.
-func (u *userService) CreateUser(ctx context.Context, password string, login string) (*model.User, error) {
-	user := model.NewUserWithoutId()
-	uContact := model.NewUserContactWithoutId(login, "LOGIN", user.Id)
-
-	user.SetPassword(password)
-	user.AddContact(uContact)
-
-	return u.repo.CreateUser(ctx, user.Id, password, user.Contacts...)
+func (u *userService) CreateUser(ctx context.Context, password, login string) (*model.User, error) {
+	return u.repo.CreateUser(ctx, login, password)
 }
 
 // DeleteUsers implements UserService.
@@ -31,8 +25,12 @@ func (u *userService) DeleteUsers(ctx context.Context, users ...*model.User) err
 }
 
 // FindUsersByIds implements UserService.
-func (u *userService) FindUsersByIds(ctx context.Context, ids ...*uuid.UUID) ([]*model.User, error) {
-	return nil, nil
+func (u *userService) FinUserById(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	return u.repo.FindUserById(ctx, id)
+}
+
+func (u *userService)	FindUserByLogin(ctx context.Context, login string) (*model.User, error) {
+	return u.repo.FindUserByLogin(ctx, login)
 }
 
 // UpdateUsers implements UserService.

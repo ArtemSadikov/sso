@@ -7,3 +7,8 @@ type RegisterResultDto struct {
 	AccessToken  *model.Token
 	RefreshToken *model.Token
 }
+
+type AuthByCredentialsResultDto struct {
+  AccessToken  *model.Token
+	RefreshToken *model.Token
+}

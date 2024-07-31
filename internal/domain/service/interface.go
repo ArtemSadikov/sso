@@ -16,7 +16,8 @@ type UserService interface {
 	CreateUser(ctx context.Context, password string, login string) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
 	DeleteUsers(ctx context.Context, users ...*model.User) error
-	FindUsersByIds(ctx context.Context, ids ...*uuid.UUID) ([]*model.User, error)
+	FinUserById(ctx context.Context, id uuid.UUID) (*model.User, error)
+	FindUserByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
 type TokenService interface {

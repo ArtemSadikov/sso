@@ -11,8 +11,9 @@ import (
 	"cinematic.com/sso/internal/infrastructure/storage/postgresql"
 	"cinematic.com/sso/internal/infrastructure/storage/repository"
 	authSrv "cinematic.com/sso/internal/presenters/grpc/auth"
-	"cinematic.com/sso/internal/usecase"
 	authUc "cinematic.com/sso/internal/usecase/auth"
+	"cinematic.com/sso/internal/usecase"
+	userRepo "cinematic.com/sso/internal/infrastructure/storage/repository/user"
 	"github.com/ArtemSadikov/cinematic.back_protos/generated/go/sso"
 	"go.uber.org/dig"
 	"google.golang.org/grpc"
@@ -53,7 +54,7 @@ func New(opts ...dig.Option) (*Container, error) {
 	}
 
 	if err := container.Provide(func(logger *slog.Logger, storage *postgresql.Storage) repository.UserRepository {
-		return repository.NewUserRepository(logger, storage.DB)
+		return userRepo.NewUserRepository(logger, storage.DB)
 	}); err != nil {
 		return nil, err
 	}

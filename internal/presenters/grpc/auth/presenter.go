@@ -25,9 +25,15 @@ func (s AuthServer) LoginByCredentials(
 	ctx context.Context,
 	in *sso.LoginByCredsReq,
 ) (*sso.LoginByCredsRes, error) {
-	s.uc.AuthByCredentials(ctx, in.Credentials.GetLogin(), in.Credentials.GetPassword())
-	// TODO
-	return nil, nil
+	res, err := s.uc.AuthByCredentials(ctx, in.Credentials.GetLogin(), in.Credentials.GetPassword())
+	if err != nil {
+		return nil, err
+	}
+
+	return &sso.LoginByCredsRes{
+		AccessToken:  grpc.MapTokenFromModel(res.AccessToken),
+		RefreshToken: grpc.MapTokenFromModel(res.RefreshToken),
+	}, nil
 }
 
 func (s AuthServer) ValidateToken(

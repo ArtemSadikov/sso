@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"cinematic.com/sso/internal/domain/model"
@@ -19,15 +20,42 @@ type authUseCase struct {
 }
 
 // AuthByCredentials implements AuthUseCase.
-func (a *authUseCase) AuthByCredentials(ctx context.Context, login string, password string) (*model.User, error) {
-	// users, err := a.userSrv.CreateUsers(ctx, model.NewUser(""))
-	// if err != nil {
-	//   a.logger.Warn("Failed to auth")
-	//   return nil, err
-	// }
+func (a *authUseCase) AuthByCredentials(ctx context.Context, login string, password string) (*usecase.AuthByCredentialsResultDto, error) {
+	op := "Auth.AuthByCredentials"
 
-	// user := users[0]
-	return nil, nil
+	log := a.logger.With(
+		slog.String("op", op),
+		slog.String("login", login),
+	)
+
+	user, err := a.userSrv.FindUserByLogin(ctx, login)
+	if err != nil {
+		a.logger.ErrorContext(ctx, "Error from find user", utils.LogErr(err))
+		return nil, err
+	}
+
+	if user == nil {
+		msg := "user by provided creds not found"
+		a.logger.WarnContext(ctx, msg)
+		return nil, errors.New(msg)
+	}
+
+	if err := user.ComparePassword(password); err != nil {
+		msg := "error from validate password"
+		a.logger.WarnContext(ctx, msg, utils.LogErr(err))
+		return nil, errors.New(msg)
+	}
+
+	tokens, err := a.tokenSrv.GeneratePair(ctx, user)
+	if err != nil {
+		log.ErrorContext(ctx, "Error from generating tokens", utils.LogErr(err))
+		return nil, err
+	}
+
+	return &usecase.AuthByCredentialsResultDto{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+	}, nil
 }
 
 // RegisterUser implements AuthUseCase.
@@ -79,26 +107,26 @@ func (a *authUseCase) ValidateToken(ctx context.Context, token string) error {
 }
 
 func (a *authUseCase) RefreshToken(ctx context.Context, token string, userId uuid.UUID) (*model.Token, error) {
-	op := "Auth.ValidateToken"
+	op := "Auth.RefreshToken"
 
 	log := a.logger.With(
 		slog.String("op", op),
 		slog.String("uid", userId.String()),
 	)
 
-  user, err := a.userSrv.FindUsersByIds(ctx, &userId)
-  if err != nil {
+	user, err := a.userSrv.FinUserById(ctx, userId)
+	if err != nil {
 		log.ErrorContext(ctx, "Error from searching user", utils.LogErr(err))
-    return nil, err
-  }
+		return nil, err
+	}
 
-  res, err := a.tokenSrv.RefreshToken(ctx, user[0], model.NewToken(token, nil))
-  if err != nil {
-    log.ErrorContext(ctx, "Error from refreshing token", utils.LogErr(err))
-    return nil, err
-  }
+	res, err := a.tokenSrv.RefreshToken(ctx, user, model.NewToken(token, nil))
+	if err != nil {
+		log.ErrorContext(ctx, "Error from refreshing token", utils.LogErr(err))
+		return nil, err
+	}
 
-  return res, nil
+	return res, nil
 }
 
 func NewAuthUseCase(

@@ -13,7 +13,8 @@ func (t UserContactType) String() string {
 }
 
 const (
-	Login UserContactType = "LOGIN"
+	EmailContactType       UserContactType = "EMAIL"
+	PhoneNumberContactType UserContactType = "PHONE_NUMBER"
 )
 
 type UserContact struct {

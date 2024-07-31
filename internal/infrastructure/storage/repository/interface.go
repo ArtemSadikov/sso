@@ -16,7 +16,8 @@ type UserRepository interface {
 }
 
 type UserSearcher interface {
-	FindUsersByIds(ctx context.Context, ids ...string) ([]*model.User, error)
+	FindUserById(ctx context.Context, id uuid.UUID) (*model.User, error)
+	FindUserByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
 type UserRemover interface {
@@ -24,6 +25,6 @@ type UserRemover interface {
 }
 
 type UserSaver interface {
-	CreateUser(ctx context.Context, id uuid.UUID, password string, contacts ...*model.UserContact) (*model.User, error)
+	CreateUser(ctx context.Context, login, password string, contacts ...*model.UserContact) (*model.User, error)
 	UpdateUser(ctx context.Context, login string) (*model.User, error)
 }

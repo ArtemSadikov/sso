@@ -16,9 +16,28 @@ type userRepo struct {
 	db     *sqlx.DB
 }
 
+func (u *userRepo) FindUserByLogin(ctx context.Context, login string) (*model.User, error) {
+	res := entity.UserEntity{}
+
+	if err := u.db.GetContext(ctx, &res, `SELECT * FROM sso.users WHERE login=$1`, login); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return mapUserToModel(&res), nil
+}
+
 // FindUsersByIds implements UserRepository.
-func (u *userRepo) FindUsersByIds(ctx context.Context, ids ...string) ([]*model.User, error) {
-	return nil, nil
+func (u *userRepo) FindUserById(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	res := entity.UserEntity{}
+
+	if err := u.db.GetContext(ctx, &res, "SELECT * FROM sso.users WHERE id = $1", id.String()); err != nil {
+		return nil, err
+	}
+
+	return mapUserToModel(&res), nil
 }
 
 // RemoveUsers implements UserRepository.
@@ -26,7 +45,7 @@ func (u *userRepo) RemoveUsers(ctx context.Context, users ...*model.User) error 
 	return nil
 }
 
-func (u *userRepo) CreateUser(ctx context.Context, id uuid.UUID, password string, contacts ...*model.UserContact) (*model.User, error) {
+func (u *userRepo) CreateUser(ctx context.Context, login, password string, contacts ...*model.UserContact) (*model.User, error) {
 	user := &entity.UserEntity{}
 
 	tx, err := u.db.BeginTxx(ctx, &sql.TxOptions{})
@@ -34,19 +53,22 @@ func (u *userRepo) CreateUser(ctx context.Context, id uuid.UUID, password string
 		return nil, err
 	}
 
-	uq, err := tx.PreparexContext(ctx, "INSERT INTO sso.users(id, password) VALUES ($1, $2) RETURNING *")
+	uq, err := tx.PreparexContext(ctx, `
+		INSERT INTO sso.users(login, password)
+		VALUES ($1, $2) RETURNING *
+	`)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
-	if err := uq.QueryRowxContext(ctx, id, password).StructScan(user); err != nil {
+	if err := uq.QueryRowxContext(ctx, login, password).StructScan(user); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
 	if len(contacts) > 0 {
-		c := []*entity.UserContact{}
+		c := make([]*entity.UserContact, len(contacts))
 		for _, contact := range contacts {
 			c = append(c, entity.NewUserContactFromModel(contact))
 		}
