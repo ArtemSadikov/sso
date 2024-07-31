@@ -33,7 +33,7 @@ func (u *userRepo) FindUserByLogin(ctx context.Context, login string) (*model.Us
 func (u *userRepo) FindUserById(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	res := entity.UserEntity{}
 
-	if err := u.db.GetContext(ctx, &res, "SELECT * FROM sso.users WHERE id = $1", id.String()); err != nil {
+	if err := u.db.GetContext(ctx, &res, "SELECT * FROM sso.users WHERE id = $1 AND is_deleted", id.String()); err != nil {
 		return nil, err
 	}
 
