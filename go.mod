@@ -19,7 +19,7 @@ require (
 )
 
 require (
-	github.com/ArtemSadikov/cinematic.back_protos v0.0.11
+	github.com/ArtemSadikov/cinematic.back_protos v0.0.12
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0

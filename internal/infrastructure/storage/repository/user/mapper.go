@@ -11,6 +11,7 @@ func mapUserToModel(in *entity.UserEntity) *model.User {
 	user.CreatedAt = in.CreatedAt
 	user.DeletedAt = in.DeletedAt
 	user.UpdatedAt = in.UpdatedAt
+	user.IsDeleted = in.IsDeleted
 
 	return user
 }

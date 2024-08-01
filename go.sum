@@ -1,7 +1,7 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/ArtemSadikov/cinematic.back_protos v0.0.11 h1:zHk2d3aClt0lSxF6IUjoXAmloaV9K9YtNKXXzvVpLNw=
-github.com/ArtemSadikov/cinematic.back_protos v0.0.11/go.mod h1:8eAfc9O5s87Axwnhey19376pHpv/lgxB7dfWRwQJ/Pc=
+github.com/ArtemSadikov/cinematic.back_protos v0.0.12 h1:LTyYV0kgzGAPBdtC5x7r0HrUE15u9AB72qPgHdVsALY=
+github.com/ArtemSadikov/cinematic.back_protos v0.0.12/go.mod h1:8eAfc9O5s87Axwnhey19376pHpv/lgxB7dfWRwQJ/Pc=
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=

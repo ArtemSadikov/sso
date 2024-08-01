@@ -18,8 +18,10 @@ func MapUserFromModel(user *model.User) *sso.User {
 	}
 
 	return &sso.User{
-		Id:       user.Id.String(),
-		Profile:  &sso.UserProfile{},
+		Id: user.Id.String(),
+		Profile: &sso.UserProfile{
+			Login: user.Login,
+		},
 		Contacts: contacts,
 	}
 }

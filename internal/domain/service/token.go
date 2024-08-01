@@ -1,8 +1,6 @@
 package service
 
 import (
-	"context"
-	"errors"
 	"time"
 
 	"cinematic.com/sso/internal/domain/model"
@@ -11,53 +9,59 @@ import (
 )
 
 type tokenService struct {
-  cfg *config.Config
+	cfg *config.Config
 }
 
-func (s *tokenService) GeneratePair(ctx context.Context, user *model.User) (*TokenPair, error) {
-  acT, err := model.BuildToken(user, s.cfg.TokenTTL, []byte(s.cfg.TokenSecret))
+func (s *tokenService) GeneratePair(user *model.User) (*TokenPair, error) {
+	acT, err := model.BuildToken(user, s.cfg.TokenTTL, []byte(s.cfg.AccessTokenSecret))
 	if err != nil {
 		return nil, err
 	}
 
-  rfT, err := model.BuildToken(user, 24 * time.Hour, []byte(s.cfg.TokenSecret))
+	rfT, err := model.BuildToken(user, 24*time.Hour, []byte(s.cfg.RefreshTokenSecret))
 	if err != nil {
 		return nil, err
 	}
 
-  return &TokenPair{
-    AccessToken: acT,
-    RefreshToken: rfT ,
-  }, nil
+	return &TokenPair{
+		AccessToken:  acT,
+		RefreshToken: rfT,
+	}, nil
 }
 
-func (s *tokenService) RefreshToken(ctx context.Context, user *model.User, token *model.Token) (*model.Token, error) {
-  if err := s.Validate(ctx, token); err != nil {
-    return nil, err
-  }
+func (s *tokenService) RefreshToken(user *model.User, token *model.Token) (*model.Token, error) {
+	if _, err := s.ValidateRefreshToken(token); err != nil {
+		return nil, err
+	}
 
-  res, err := model.BuildToken(user, s.cfg.TokenTTL, []byte(s.cfg.TokenSecret))
+	res, err := model.BuildToken(user, s.cfg.TokenTTL, []byte(s.cfg.AccessTokenSecret))
 	if err != nil {
 		return nil, err
 	}
 
-  return res, nil
+	return res, nil
 }
 
-func (s *tokenService) Validate(ctx context.Context, token *model.Token) error {
-  res, err := jwt.Parse(token.Value, func(t *jwt.Token) (interface{}, error) {
-    return []byte(s.cfg.TokenSecret), nil
-  })
-
-  if !res.Valid {
-    return errors.New("invalid token")
-  }
-
-  return err
+func (s *tokenService) ValidateRefreshToken(token *model.Token) (*model.TokenClaims, error) {
+	return s.validate(token, s.cfg.RefreshTokenSecret)
 }
 
-func NewTokenService(
-  cfg *config.Config,
-) *tokenService {
-  return &tokenService{cfg}
+func (s *tokenService) ValidateAccessToken(token *model.Token) (*model.TokenClaims, error) {
+	return s.validate(token, s.cfg.AccessTokenSecret)
+}
+
+func (s *tokenService) validate(token *model.Token, secret string) (*model.TokenClaims, error) {
+	res, err := jwt.ParseWithClaims(token.Value, &model.TokenClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Claims.(*model.TokenClaims), nil
+}
+
+func NewTokenService(cfg *config.Config) *tokenService {
+	return &tokenService{cfg}
 }

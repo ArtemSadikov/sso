@@ -11,12 +11,13 @@ const (
 )
 
 type Config struct {
-	Env            Environment    `yaml:"env" env-default:"local"`
-	GRPC           *GrpcConfig    `yaml:"grpc"`
-	Storage        *StorageConfig `yaml:"postgres"`
-	MigrationsPath string
-	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
-	TokenSecret    string        `yaml:"token_secret"`
+	Env                Environment    `yaml:"env" env-default:"local"`
+	GRPC               *GrpcConfig    `yaml:"grpc"`
+	Storage            *StorageConfig `yaml:"postgres"`
+	MigrationsPath     string
+	TokenTTL           time.Duration `yaml:"token_ttl" env-default:"1h"`
+	AccessTokenSecret  string        `yaml:"access_token_secret"`
+	RefreshTokenSecret string        `yaml:"refresh_token_secret"`
 }
 
 type GrpcConfig struct {

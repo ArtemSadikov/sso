@@ -6,7 +6,6 @@ import (
 	"cinematic.com/sso/internal/presenters/grpc"
 	"cinematic.com/sso/internal/usecase"
 	"github.com/ArtemSadikov/cinematic.back_protos/generated/go/sso"
-	"github.com/google/uuid"
 )
 
 type AuthServer struct {
@@ -63,11 +62,7 @@ func (s AuthServer) RefreshToken(
 	ctx context.Context,
 	in *sso.RefreshTokenReq,
 ) (*sso.RefreshTokenRes, error) {
-	userId, err := uuid.Parse(in.GetUserId())
-	if err != nil {
-		return nil, err
-	}
-	res, err := s.uc.RefreshToken(ctx, in.GetRefreshToken(), userId)
+	res, err := s.uc.RefreshToken(ctx, in.GetRefreshToken())
 	if err != nil {
 		return nil, err
 	}

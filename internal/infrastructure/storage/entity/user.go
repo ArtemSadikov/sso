@@ -13,6 +13,7 @@ type UserEntity struct {
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt *time.Time `db:"updated_at"`
 	DeletedAt *time.Time `db:"deleted_at"`
+	IsDeleted bool       `db:"is_deleted"`
 
 	Password string `db:"password"`
 	Login    string `db:"login"`

@@ -21,7 +21,8 @@ type UserService interface {
 }
 
 type TokenService interface {
-	GeneratePair(ctx context.Context, user *model.User) (*TokenPair, error)
-	RefreshToken(ctx context.Context, user *model.User, token *model.Token) (*model.Token, error)
-	Validate(ctx context.Context, token *model.Token) error
+	GeneratePair(user *model.User) (*TokenPair, error)
+	RefreshToken(user *model.User, token *model.Token) (*model.Token, error)
+	ValidateRefreshToken(token *model.Token) (*model.TokenClaims, error)
+	ValidateAccessToken(token *model.Token) (*model.TokenClaims, error)
 }

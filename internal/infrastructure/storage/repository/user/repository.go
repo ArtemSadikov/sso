@@ -33,7 +33,8 @@ func (u *userRepo) FindUserByLogin(ctx context.Context, login string) (*model.Us
 func (u *userRepo) FindUserById(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	res := entity.UserEntity{}
 
-	if err := u.db.GetContext(ctx, &res, "SELECT * FROM sso.users WHERE id = $1 AND is_deleted", id.String()); err != nil {
+	err := u.db.GetContext(ctx, &res, "SELECT * FROM sso.users WHERE id = $1 AND is_deleted = FALSE", id.String())
+	if err != nil {
 		return nil, err
 	}
 
@@ -84,7 +85,7 @@ func (u *userRepo) CreateUser(ctx context.Context, login, password string, conta
 		return nil, err
 	}
 
-	return user.MapToModel(), nil
+	return mapUserToModel(user), nil
 }
 
 func (u *userRepo) UpdateUser(ctx context.Context, login string) (*model.User, error) {

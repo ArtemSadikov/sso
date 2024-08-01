@@ -9,7 +9,6 @@ import (
 	"cinematic.com/sso/internal/domain/service"
 	"cinematic.com/sso/internal/usecase"
 	"cinematic.com/sso/internal/utils"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -46,7 +45,7 @@ func (a *authUseCase) AuthByCredentials(ctx context.Context, login string, passw
 		return nil, errors.New(msg)
 	}
 
-	tokens, err := a.tokenSrv.GeneratePair(ctx, user)
+	tokens, err := a.tokenSrv.GeneratePair(user)
 	if err != nil {
 		log.ErrorContext(ctx, "Error from generating tokens", utils.LogErr(err))
 		return nil, err
@@ -79,7 +78,7 @@ func (a *authUseCase) RegisterUser(ctx context.Context, login string, password s
 		return nil, err
 	}
 
-	tokens, err := a.tokenSrv.GeneratePair(ctx, user)
+	tokens, err := a.tokenSrv.GeneratePair(user)
 	if err != nil {
 		log.ErrorContext(ctx, "Error from generating tokens", utils.LogErr(err))
 		return nil, err
@@ -98,7 +97,8 @@ func (a *authUseCase) ValidateToken(ctx context.Context, token string) error {
 	log := a.logger.With(slog.String("op", op))
 	t := model.NewToken(token, nil)
 
-	if err := a.tokenSrv.Validate(ctx, t); err != nil {
+	_, err := a.tokenSrv.ValidateAccessToken(t);
+  if err != nil {
 		log.ErrorContext(ctx, "Error from validating token", utils.LogErr(err))
 		return err
 	}
@@ -106,21 +106,28 @@ func (a *authUseCase) ValidateToken(ctx context.Context, token string) error {
 	return nil
 }
 
-func (a *authUseCase) RefreshToken(ctx context.Context, token string, userId uuid.UUID) (*model.Token, error) {
+func (a *authUseCase) RefreshToken(ctx context.Context, token string) (*model.Token, error) {
 	op := "Auth.RefreshToken"
 
-	log := a.logger.With(
-		slog.String("op", op),
-		slog.String("uid", userId.String()),
-	)
+	log := a.logger.With(slog.String("op", op))
 
-	user, err := a.userSrv.FinUserById(ctx, userId)
+  t := model.NewToken(token, nil)
+
+  claims, err := a.tokenSrv.ValidateRefreshToken(t)
+  if err != nil {
+		log.ErrorContext(ctx, "Error from validating token", utils.LogErr(err))
+		return nil, err
+  }
+
+  log.With(slog.String("uid", claims.UserId.String()))
+
+	user, err := a.userSrv.FinUserById(ctx, claims.UserId)
 	if err != nil {
 		log.ErrorContext(ctx, "Error from searching user", utils.LogErr(err))
 		return nil, err
 	}
 
-	res, err := a.tokenSrv.RefreshToken(ctx, user, model.NewToken(token, nil))
+	res, err := a.tokenSrv.RefreshToken(user, t)
 	if err != nil {
 		log.ErrorContext(ctx, "Error from refreshing token", utils.LogErr(err))
 		return nil, err
